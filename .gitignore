@@ -1,0 +1,28 @@
+# 빌드 결과물 제외
+/out/
+target/
+build/
+*.class
+*.jar
+*.war
+*.ear
+
+# OS별 불필요 파일
+.DS_Store
+Thumbs.db
+
+# 환경설정 파일 제외
+*.log
+*.env
+
+# Python, Node 프로젝트 연동 시 불필요 파일
+__pycache__/
+*.pyc
+node_modules/
+
+# IntelliJ (특정 파일만 제외 - .idea/는 포함시킴)
+# .idea 폴더 전체 제외
+.idea/
+
+# Docker 관련 파일 제외 (선택)
+docker-compose.override.yml
