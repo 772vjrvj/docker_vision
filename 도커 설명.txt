@@ -1,0 +1,351 @@
+Docker 사용 가이드 (크롤링 프로젝트 중심)
+
+
+🐳 Docker 설치 및 테스트
+
+
+설치
+공식 홈페이지: https://www.docker.com/products/docker-desktop
+
+
+버전 확인
+docker --version
+# 예시: Docker version 28.0.4, build b8034c0
+
+
+테스트 컨테이너 실행
+docker run hello-world
+정상 출력되면 Docker가 잘 작동하는 상태입니다.
+
+
+Ubuntu 컨테이너 접속 테스트
+docker run -it ubuntu bash
+-it: 입력 가능하게 함
+
+
+bash: 셸 실행
+exit 입력 시 컨테이너 종료
+
+
+📁 작업 디렉토리 구성
+
+C:\Users\<사용자명>\Desktop\crawler-docker
+
+필요한 파일
+
+main.py: 크롤링 코드
+
+requirements.txt: Python 라이브러리 목록
+
+Dockerfile: 이미지 빌드 정의 파일
+
+📄 requirements.txt 예시
+
+selenium
+webdriver-manager
+schedule
+requests
+psutil
+
+🐳 Dockerfile 예시
+
+# 1. Python 베이스 이미지
+FROM python:3.10-slim
+
+# 2. 환경 변수 설정
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# 3. 패키지 설치 (Chrome 포함)
+RUN apt-get update && apt-get install -y \
+    chromium \
+    chromium-driver \
+    fonts-liberation \
+    libnss3 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libxss1 \
+    libxcomposite1 \
+    libxrandr2 \
+    libasound2 \
+    libpangocairo-1.0-0 \
+    libgtk-3-0 \
+    libgbm-dev \
+    wget \
+    curl \
+    unzip \
+    gnupg \
+    ca-certificates \
+ && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# 4. 작업 디렉토리
+WORKDIR /app
+
+# 5. 소스 복사
+COPY requirements.txt .
+COPY main.py .
+
+# 6. Python 라이브러리 설치
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 7. Chrome 환경 설정
+ENV CHROME_BIN=/usr/bin/chromium
+ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
+ENV PATH="${CHROME_BIN}:${PATH}"
+
+# 8. 실행 명령
+CMD ["python", "main.py"]
+
+🔧 이미지 빌드 및 확인
+
+cd D:\GIT\docker\vision
+docker build -t vision-crawler .
+
+자주 변경되는 파일은 아래로 배치
+requirements.txt는 단독으로 복사
+
+캐시 강제 무시는 --no-cache, 최신 pull은 --pull
+
+docker build -t vision-crawler .
+# 일반적으로 캐시 사용, 빠르고 효율적
+
+docker build --no-cache -t vision-crawler .
+# 문제 생길 때 강제로 재빌드
+필요 시 .dockerignore도 같이 쓰면 캐시에 더욱 최적화됩니다.
+
+
+
+빌드 성공 메시지 예시
+Successfully tagged vision-crawler:latest
+
+CACHED: 이전 결과 재사용
+FINISHED: 빌드 완료
+
+
+docker images         # 이미지 목록 확인
+docker ps             # 실행 중 컨테이너
+docker ps -a          # 실행 종료 포함 전체
+
+
+🚀 컨테이너 실행 방식
+
+1회성 실행
+docker run --rm --name vision-crawler-container vision-crawler
+--rm: 종료 시 컨테이너 삭제
+
+지속 실행
+docker run --name vision-crawler-container vision-crawler
+
+로그 확인 / 재실행
+docker logs vision-crawler-container
+docker start -a vision-crawler-container
+
+컨테이너 삭제
+
+docker rm vision-crawler-container
+# 실행 중인 경우 강제 삭제
+
+docker rm -f vision-crawler-container
+
+⚙️ 성능 향상 옵션
+
+docker run --name vision-crawler-container \
+  --shm-size=1g --memory=2g --cpus=2.0 \
+  vision-crawler
+
+docker run --name vision-crawler-container --shm-size=1g --memory=2g --cpus=2.0 vision-crawler
+
+옵션
+설명
+--shm-size=1g
+공유 메모리 영역 증가 (Chrome 안정성 향상)
+--memory=2g
+메모리 제한
+--cpus=2.0
+CPU 사용량 제한
+
+🧹 불필요 이미지 정리
+docker image prune
+사용하지 않는 이미지 정리
+
+
+🛠️ 유용한 팁
+
+기존 컨테이너 강제 삭제 후 실행
+
+docker rm -f vision-crawler-container 2>nul
+docker run --name vision-crawler-container vision-crawler
+
+자동 실행 배치 파일 (Windows)
+
+run-crawler.bat
+
+@echo off
+cd /d D:\GIT\docker\vision
+docker rm -f vision-crawler-container >nul 2>&1
+docker run --name vision-crawler-container vision-crawler
+pause
+
+
+
+
+
+--------------------------------
+
+
+
+
+
+
+도커 다운로드
+https://www.docker.com/products/docker-desktop
+
+
+
+도커 버전 확인
+C:\Users\772vj>docker --version
+Docker version 28.0.4, build b8034c0
+
+
+첫 번째 컨테이너 실행해보기
+docker run hello-world
+이건 Docker의 "안녕하세요!" 테스트입니다. 잘 나오면 Docker가 제대로 작동한다는 뜻이에요.
+
+
+docker run -it ubuntu bash
+ubuntu라는 리눅스 운영체제 안에 들어가는 거예요.
+-it은 키보드로 명령 입력 가능하게 해주는 옵션
+bash는 리눅스 터미널을 여는 명령어예요
+📦 우리는 이걸 "컨테이너"라고 부릅니다.
+
+
+root@724ebbc025a6:/#
+여기는 이제 리눅스 컨테이너 안이에요.
+당신은 지금 "가상의 리눅스 컴퓨터 안"에 들어온 거예요.
+
+
+컨테이너 밖으로 나가고 싶으면, 이렇게 입력하세요:
+exit
+
+
+먼저 작업할 폴더를 하나 만들어요. 예를 들어:
+C:\Users\772vj\Desktop\crawler-docker
+
+
+파일 				이름	설명
+main.py				당신의 크롤러 코드 (현재 있는 전체 코드)
+requirements.txt	필요한 파이썬 라이브러리 목록
+Dockerfile			Docker에서 이미지를 어떻게 만들지 알려주는 설명서
+
+
+requirements.txt
+selenium
+webdriver-manager
+schedule
+requests
+psutil
+
+
+Dockerfile 만들기
+Dockerfile파일 참조
+
+
+3개 파일이 있는 경로에서
+cd D:\GIT\docker\vision
+docker build -t vision-crawler .
+
+
+
+잘 되면 나오는 마지막 메시지
+Successfully built abc123456789
+Successfully tagged vision-crawler:latest
+
+로그 내용	설명
+FINISHED	빌드 성공! ✅
+CACHED	이전 설치 결과 재사용해서 빨라짐 👍
+RUN pip install	requirements 설치 완료
+naming to docker.io/library/vision-crawler:latest	이미지 이름 잘 설정됨 (vision-crawler)
+2 warnings	걱정하지 마세요. ENV 문법 경고일 뿐이고 동작에는 문제 없습니다 ✅
+
+
+실행중이도커
+docker images
+REPOSITORY       TAG       IMAGE ID       CREATED         SIZE
+vision-crawler   latest    ee4a21c7e7fe   2 minutes ago   1.53GB
+ubuntu           latest    72297848456d   2 months ago    117MB
+hello-world      latest    7e1a4e2d11e2   2 months ago    20.4kB
+
+
+항목	보임 여부	설명
+Dockerfile, main.py, requirements.txt	✅ 디렉토리에 있음	사용자가 직접 만든 것
+vision-crawler 이미지	❌ 디렉토리에 없음	docker images 로 확인 가능
+실행된 컨테이너	❌ 디렉토리에 없음	docker ps 또는 docker ps -a로 확인 가능
+
+
+
+docker run --rm --name crawler1 vision-crawler
+--rm: 실행 끝나면 컨테이너 자동 삭제
+--name crawler1: 컨테이너 이름 지정
+vision-crawler: 방금 만든 이미지 이름
+
+
+
+--rm	실행 후 자동 삭제	테스트나 1회성 실행
+(없음)	종료 후에도 컨테이너 보존	서비스용, 로그확인, 유지용
+
+
+
+docker run --rm --name vision-craler-container vision-crawler
+
+
+
+🧹 오래된 이미지 삭제 명령어 (선택)
+docker image prune
+🔸 "태그 없는 예전 이미지"만 싹! 정리해줘요
+🔸 현재 사용하는 이미지는 건드리지 않아요
+
+docker run --rm --name vision-crawler-container vision-crawler
+
+docker ps -a
+
+✅ 특정 이름의 컨테이너 삭제
+docker rm vision-crawler-container
+
+
+만약 실행 중이면 -f 옵션을 붙여 강제 종료+삭제:
+docker rm -f vision-crawler-container
+
+
+이렇게 하면 매번 실행 전에 기존 컨테이너를 삭제하고 새로 띄우는 형태로 깔끔하게 유지할 수 있어요.
+docker rm -f vision-crawler-container
+docker run --name vision-crawler-container vision-crawler
+
+
+❌ 그런데 삭제되면 불편할 때는?
+컨테이너를 유지하려면 --rm 빼고 실행하세요:
+docker run --name vision-crawler-container vision-crawler
+실행 후 컨테이너는 멈춘 상태로 남아있고, 나중에 로그를 확인하거나 다시 시작할 수도 있어요:
+
+
+docker start -a vision-crawler-container
+docker logs vision-crawler-container
+
+
+
+
+옵션	설명
+--shm-size=2g	공유 메모리 영역을 2GB로 설정 (크롬 안정화에 필수)
+--memory=2g	메모리 제한 설정 (예: 2GB)
+--cpus=2.0	CPU 사용 제한 (2개 논리코어까지 사용 허용)
+
+컨테이너 로그가 남도록 --rm 제거도 가능
+docker run --rm --name vision-crawler-container --shm-size=3.5g --memory=3.5g --cpus=3.0 vision-crawler
+
+
+docker stop vision-crawler-container
+docker rm vision-crawler-container
+
+
+
+
+
