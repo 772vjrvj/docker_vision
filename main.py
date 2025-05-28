@@ -392,15 +392,15 @@ def naver_cralwing_all(part_index, m):
 
     print(f"{get_current_time()} 1위 시작")
     obj_list = get_current_rank('one', part_index, m)
-    # naver_cralwing(obj_list)
-    # copy_fail_list = copy.deepcopy(fail_list)
-    # fail_list = []
-    # success_list = []
-    # eq_cnt = 0
-    # df_cnt = 0
-    # naver_cralwing(copy_fail_list)
-    # time.sleep(60)
-    # print(f"{get_current_time()} 1위 끝")
+    naver_cralwing(obj_list)
+    copy_fail_list = copy.deepcopy(fail_list)
+    fail_list = []
+    success_list = []
+    eq_cnt = 0
+    df_cnt = 0
+    naver_cralwing(copy_fail_list)
+    time.sleep(60)
+    print(f"{get_current_time()} 1위 끝")
 
     # print(f"{get_current_time()} 301위 시작")
     # obj_list = get_current_rank('last')
