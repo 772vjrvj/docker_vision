@@ -64,18 +64,41 @@ def setup_chrome_driver():
     return driver
 
 
-def get_current_rank(param_type):
+def split_into_parts(data, m):
+    n = len(data)
+    base_size = n // m
+    remainder = n % m
+
+    sizes = [base_size] * m
+    for i in range(remainder):
+        sizes[i] += 1  # 앞쪽부터 1개씩 추가
+
+    result = []
+    start = 0
+    for size in sizes:
+        result.append(data[start:start + size])
+        start += size
+    return result
+
+
+def get_current_rank(param_type, part_index, m):
     try:
-        params = {
-            'type': param_type
-        }
+        params = {'type': param_type}
         response = requests.get(SELECT_URL, params=params)
         response.raise_for_status()
         data = response.json()
-        print(f"{get_current_time()} ✅ 응답 수신 성공 데이터: {data}")
-        return data
-    except Exception:
-        print(f"{get_current_time()} ❌ 요청 실패")
+        print(f"{get_current_time()} ✅ 응답 수신 성공 데이터 수: {len(data)}")
+
+        # m등분 후 원하는 인덱스의 파트 반환
+        split_data = split_into_parts(data, m)
+        split_data_list_index = split_data[part_index]
+
+        print(f"{get_current_time()} ✅ 쪼갠 데이터 수: {len(split_data_list_index)}")
+
+        return split_data_list_index
+    except Exception as e:
+        print(f"{get_current_time()} ❌ 요청 실패: {e}")
+        return []
 
 
 def update_obj_list(obj_list):
@@ -364,56 +387,55 @@ def naver_cralwing(obj_list):
     driver.quit()
 
 
-def naver_cralwing_all():
+def naver_cralwing_all(part_index, m):
     global fail_list, success_list, eq_cnt, df_cnt
 
     print(f"{get_current_time()} 1위 시작")
-    obj_list = get_current_rank('one')
-    naver_cralwing(obj_list)
-    copy_fail_list = copy.deepcopy(fail_list)
-    fail_list = []
-    success_list = []
-    eq_cnt = 0
-    df_cnt = 0
-    naver_cralwing(copy_fail_list)
-    time.sleep(60)
-    print(f"{get_current_time()} 1위 끝")
+    obj_list = get_current_rank('one', part_index, m)
+    # naver_cralwing(obj_list)
+    # copy_fail_list = copy.deepcopy(fail_list)
+    # fail_list = []
+    # success_list = []
+    # eq_cnt = 0
+    # df_cnt = 0
+    # naver_cralwing(copy_fail_list)
+    # time.sleep(60)
+    # print(f"{get_current_time()} 1위 끝")
 
-    print(f"{get_current_time()} 301위 시작")
-    obj_list = get_current_rank('last')
-    naver_cralwing(obj_list)
-    copy_fail_list = copy.deepcopy(fail_list)
-    fail_list = []
-    success_list = []
-    eq_cnt = 0
-    df_cnt = 0
-    naver_cralwing(copy_fail_list)
-    time.sleep(60)
-    print(f"{get_current_time()} 301위 끝")
-
-    print(f"{get_current_time()} 999위 시작")
-    obj_list = get_current_rank('none')
-    naver_cralwing(obj_list)
-    copy_fail_list = copy.deepcopy(fail_list)
-
-
-    fail_list = []
-    success_list = []
-    eq_cnt = 0
-    df_cnt = 0
-    naver_cralwing(copy_fail_list)
-    time.sleep(60)
-    print(f"{get_current_time()} 999위 끝")
+    # print(f"{get_current_time()} 301위 시작")
+    # obj_list = get_current_rank('last')
+    # naver_cralwing(obj_list)
+    # copy_fail_list = copy.deepcopy(fail_list)
+    # fail_list = []
+    # success_list = []
+    # eq_cnt = 0
+    # df_cnt = 0
+    # naver_cralwing(copy_fail_list)
+    # time.sleep(60)
+    # print(f"{get_current_time()} 301위 끝")
+    #
+    # print(f"{get_current_time()} 999위 시작")
+    # obj_list = get_current_rank('none')
+    # naver_cralwing(obj_list)
+    # copy_fail_list = copy.deepcopy(fail_list)
+    #
+    # fail_list = []
+    # success_list = []
+    # eq_cnt = 0
+    # df_cnt = 0
+    # naver_cralwing(copy_fail_list)
+    # time.sleep(60)
+    # print(f"{get_current_time()} 999위 끝")
 
 if __name__ == "__main__":
 
     print(f"{get_current_time()} 순위 보정 프로그램 정상 시작 완료!!!")
-    schedule.every().day.at("03:00").do(naver_cralwing_all)
+    # schedule.every().day.at("02:30").do(naver_cralwing_all)
 
     fst = True
     while True:
         if fst:
-            # naver_cralwing_all()
+            naver_cralwing_all(1,3)
             fst = False
             print(f"{get_current_time()} 순위 보정 프로그램 while 정상 시작 완료!!!")
         schedule.run_pending()

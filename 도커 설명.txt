@@ -99,7 +99,9 @@ CMD ["python", "main.py"]
 🔧 이미지 빌드 및 확인
 
 cd D:\GIT\docker\vision
-docker build -t vision-crawler .
+
+
+
 
 자주 변경되는 파일은 아래로 배치
 requirements.txt는 단독으로 복사
